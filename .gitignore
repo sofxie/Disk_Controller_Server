@@ -30,3 +30,29 @@
 *.exe
 *.out
 *.app
+
+# Visual Studio specific files
+.vs/
+*.user
+*.suo
+*.vcxproj.user
+*.ipch/
+*.pch
+*.cache
+*.ilk
+*.log
+*.tlog/
+*.lastbuildstate
+*.pdb
+
+# Visual Studio build results
+Debug/
+Release/
+x64/  # o cualquier otra configuración de carpeta de salida
+
+# NuGet Packages
+*.nupkg
+packages/
+
+# Others
+TestResults/
