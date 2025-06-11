@@ -1,0 +1,3 @@
+C:\Users\sofia\source\repos\Disk_Controller_Server\Disk_Controller_Server\x64\Debug\Disk_Controller_Server.vcxproj.AssemblyReference.cache
+C:\Users\sofia\source\repos\Disk_Controller_Server\Disk_Controller_Server\x64\Debug\DiskControllerServer.Disk_Controller.resources
+C:\Users\sofia\source\repos\Disk_Controller_Server\Disk_Controller_Server\x64\Debug\Disk_Controller_Server.vcxproj.GenerateResource.cache
