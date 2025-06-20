@@ -1,4 +1,6 @@
 #include "PDF_Reader_Compresion.h"
+#include <regex>
+#include <iostream>
 
 std::shared_ptr<PDF_Reader_Compresion::Nodo> PDF_Reader_Compresion::construirArbolHuffman(const std::string& texto) {
     std::unordered_map<char, int> frecuencia;
@@ -50,7 +52,10 @@ std::string PDF_Reader_Compresion::generarNumero6DigitosComoString() {
 
 std::string PDF_Reader_Compresion::procesarPDFyGuardarHuffman(const std::string& rutaPDF, const std::string& rutaBase) {
     std::string codigo_del_pdf = generarNumero6DigitosComoString();
-    std::string archivoSalida = rutaBase + codigo_del_pdf + ".txt";
+    std::string nombrePDF = obtenerNombreBase(rutaPDF);
+    std::string nombreCodigo = nombrePDF + "_" + codigo_del_pdf;
+
+    std::string archivoSalida = rutaBase + nombreCodigo + ".txt";
 
     std::string comando = "powershell -Command \"& C:\\PDFR\\pdftotext.exe " + rutaPDF + " " + archivoSalida + "\"";
 
@@ -77,7 +82,7 @@ std::string PDF_Reader_Compresion::procesarPDFyGuardarHuffman(const std::string&
     std::unordered_map<char, std::string> codigos;
     generarCodigos(arbol, "", codigos);
 
-    std::string archivoSalidaHuff = rutaBase + "TablaCodigosHuffman" + codigo_del_pdf + ".txt";
+    std::string archivoSalidaHuff = rutaBase + "TablaCodigosHuffman" + nombrePDF + ".txt";
     std::ofstream tablaSalida(archivoSalidaHuff);
     if (!tablaSalida) {
         std::cerr << "Error: No se pudo crear el archivo de la tabla de códigos.\n";
@@ -95,7 +100,7 @@ std::string PDF_Reader_Compresion::procesarPDFyGuardarHuffman(const std::string&
     tablaSalida.close();
 
     std::string textoCodificado = codificarTexto(textoCompleto, codigos);
-    std::string archivocomprimido = rutaBase + "Textocomprimido_" + codigo_del_pdf + ".txt";
+    std::string archivocomprimido = rutaBase + "Textocomprimido" + nombrePDF + ".txt";
 
     std::ofstream salida(archivocomprimido);
     if (salida) {
@@ -181,7 +186,7 @@ std::string PDF_Reader_Compresion::decodificarTexto(const std::string& textoCodi
     return resultado;
 }
 
-void PDF_Reader_Compresion::DecomprimirFile(std::string fileComprimido, std::string rutaBase) {
+void PDF_Reader_Compresion::DecomprimirFile(std::string fileComprimido, std::string rutaBase, std::string rutaPDF) {
     size_t separador = fileComprimido.find('|');
     std::string codigoPDF = fileComprimido.substr(0, separador);
     std::string textoCodificado = fileComprimido.substr(separador + 1);
@@ -191,7 +196,9 @@ void PDF_Reader_Compresion::DecomprimirFile(std::string fileComprimido, std::str
         return;
     }
 
-    std::string rutaTabla = rutaBase + "TablaCodigosHuffman" + codigoPDF + ".txt";
+    std::string nombrePDF = obtenerNombreBase(rutaPDF);
+
+    std::string rutaTabla = rutaBase + "TablaCodigosHuffman" + nombrePDF + ".txt";
     std::unordered_map<char, std::string> tabla = leerTablaHuffman(rutaTabla);
     if (tabla.empty()) {
         std::cerr << "No se pudo leer la tabla Huffman o está vacía.\n";
@@ -204,7 +211,7 @@ void PDF_Reader_Compresion::DecomprimirFile(std::string fileComprimido, std::str
     std::cout << "\nTexto descomprimido (primeros 500 caracteres):\n";
     std::cout << textoOriginal.substr(0, 500) << "...\n";
 
-    std::string archivoDescomprimido = rutaBase + "TextoDescomprimido_" + codigoPDF + ".txt";
+    std::string archivoDescomprimido = rutaBase + "TextoDescomprimido" + nombrePDF + ".txt";
     std::ofstream salida(archivoDescomprimido);
     if (salida) {
         salida << textoOriginal;
@@ -214,4 +221,34 @@ void PDF_Reader_Compresion::DecomprimirFile(std::string fileComprimido, std::str
     else {
         std::cerr << "No se pudo guardar el texto descomprimido.\n";
     }
+
 }
+
+void PDF_Reader_Compresion::eliminarArchivosGenerados(const std::string& rutaPDF, const std::string& rutaBase) {
+    std::string nombrePDF = obtenerNombreBase(rutaPDF);
+
+    // Buscamos los archivos que empiezan con el nombre del PDF y terminan en .txt
+    std::vector<std::string> extensiones = {
+        rutaBase + nombrePDF + "_*.txt", // comodín para nombres generados como: reporte_123456.txt
+        rutaBase + "TablaCodigosHuffman" + nombrePDF + ".txt",
+        rutaBase + "Textocomprimido" + nombrePDF + ".txt",
+        rutaBase + "TextoDescomprimido" + nombrePDF + ".txt"
+    };
+
+    for (const std::string& patron : extensiones) {
+        std::string comando = "for %f in (" + patron + ") do del \"%f\"";
+        system(("cmd /C " + comando).c_str());
+    }
+}
+
+
+std::string PDF_Reader_Compresion::obtenerNombreBase(const std::string& rutaPDF) {
+    size_t posBarra = rutaPDF.find_last_of("\\/");
+    size_t posPunto = rutaPDF.find_last_of(".");
+    if (posPunto == std::string::npos || posPunto < posBarra) {
+        posPunto = rutaPDF.length();
+    }
+    return rutaPDF.substr(posBarra + 1, posPunto - posBarra - 1);
+}
+
+

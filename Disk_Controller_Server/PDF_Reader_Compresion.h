@@ -14,7 +14,8 @@ public:
     PDF_Reader_Compresion() = default;
 
     std::string procesarPDFyGuardarHuffman(const std::string& rutaPDF, const std::string& rutaBase);
-    void DecomprimirFile(std::string fileComprimido, std::string rutaBase = "C:\\PDFR\\");
+    void DecomprimirFile(std::string fileComprimido, std::string rutaBase, std::string rutaPDF);
+    void eliminarArchivosGenerados(const std::string& rutaPDF, const std::string& rutaBase);
 
 private:
     struct Nodo {
@@ -43,6 +44,8 @@ private:
     std::unordered_map<char, std::string> leerTablaHuffman(const std::string& ruta);
     std::shared_ptr<Nodo> reconstruirArbolDesdeTabla(const std::unordered_map<char, std::string>& codigos);
     std::string decodificarTexto(const std::string& textoCodificado, std::shared_ptr<Nodo> arbol);
+    std::string obtenerNombreBase(const std::string& rutaPDF);
+
 };
 
 #endif // PDF_READER_COMPRESION_H
