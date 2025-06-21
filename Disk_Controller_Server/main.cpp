@@ -1,5 +1,6 @@
 #include "Disk_Controller.h"
 #include "ConeccionHTTP.h"
+#include "PDF_Reader_Compresion.h"
 
 using namespace System;
 using namespace System::Windows::Forms;
@@ -15,6 +16,10 @@ void RunServidorHTTP() {
 [STAThread]
 int main(array<String^>^ args) {
 
+
+
+	////////////
+
 	// Para iniciar la interfaz
 	Application::EnableVisualStyles();
 	Application::SetCompatibleTextRenderingDefault(false);
@@ -27,6 +32,8 @@ int main(array<String^>^ args) {
 	serverThread->Start();
 
 	Application::Run(form);
+
+
 
 	return 0;
 }
