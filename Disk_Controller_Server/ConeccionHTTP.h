@@ -5,4 +5,5 @@ class ConeccionHTTP {
 public:
 	void run();
 	void connectDiskNode(int Nodeport, const std::string& Nodeip);
+	std::string sendStatusToNode(const std::string& nodeIP, int nodePort);
 };
