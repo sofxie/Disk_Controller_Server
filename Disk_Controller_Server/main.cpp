@@ -1,4 +1,4 @@
-#include "Disk_Controller.h"
+ï»¿#include "Disk_Controller.h"
 #include "ConeccionHTTP.h"
 #include "PDF_Reader_Compresion.h"
 
@@ -10,13 +10,11 @@ using namespace System::Threading;
 
 void RunServidorHTTP() {
 	ConeccionHTTP* conn = new ConeccionHTTP();
-	conn->run();  // Esta es tu función con while(true)
+	conn->run(); 
 }
 
 [STAThread]
 int main(array<String^>^ args) {
-
-
 
 	////////////
 
@@ -32,8 +30,6 @@ int main(array<String^>^ args) {
 	serverThread->Start();
 
 	Application::Run(form);
-
-
 
 	return 0;
 }

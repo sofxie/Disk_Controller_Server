@@ -1,4 +1,4 @@
-#ifndef PDF_READER_COMPRESION_H
+﻿#ifndef PDF_READER_COMPRESION_H
 #define PDF_READER_COMPRESION_H
 
 #include <iostream>
@@ -16,6 +16,7 @@ public:
     std::string procesarPDFyGuardarHuffman(const std::string& rutaPDF, const std::string& rutaBase);
     void DecomprimirFile(std::string fileComprimido, std::string rutaBase, std::string rutaPDF);
     void eliminarArchivosGenerados(const std::string& rutaPDF, const std::string& rutaBase);
+    std::string obtenerNombreBase(const std::string& rutaPDF);  
 
 private:
     struct Nodo {
@@ -25,10 +26,12 @@ private:
         std::shared_ptr<Nodo> derecha;
 
         Nodo(char simbolo, int frecuencia)
-            : simbolo(simbolo), frecuencia(frecuencia), izquierda(nullptr), derecha(nullptr) {}
+            : simbolo(simbolo), frecuencia(frecuencia), izquierda(nullptr), derecha(nullptr) {
+        }
 
         Nodo(std::shared_ptr<Nodo> izq, std::shared_ptr<Nodo> der)
-            : simbolo('\0'), frecuencia(izq->frecuencia + der->frecuencia), izquierda(izq), derecha(der) {}
+            : simbolo('\0'), frecuencia(izq->frecuencia + der->frecuencia), izquierda(izq), derecha(der) {
+        }
     };
 
     struct Comparar {
@@ -44,7 +47,7 @@ private:
     std::unordered_map<char, std::string> leerTablaHuffman(const std::string& ruta);
     std::shared_ptr<Nodo> reconstruirArbolDesdeTabla(const std::unordered_map<char, std::string>& codigos);
     std::string decodificarTexto(const std::string& textoCodificado, std::shared_ptr<Nodo> arbol);
-    std::string obtenerNombreBase(const std::string& rutaPDF);
+    // obtenerNombreBase, lo movi public
 
 };
 
