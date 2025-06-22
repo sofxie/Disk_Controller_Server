@@ -13,4 +13,5 @@ public:
 	void odtenerdocu(const json& data);
 	void eliminardocu(const json& data);
 	void connectDiskNode(int Nodeport, const std::string& Nodeip);
+	std::string sendStatusToNode(const std::string& nodeIP, int nodePort);
 };
