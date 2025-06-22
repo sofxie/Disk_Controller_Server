@@ -1,5 +1,6 @@
 #pragma once
 #include "json.hpp"
+#include "PDF_Reader_Compresion.h"
 using json = nlohmann::json;
 
 class ConeccionHTTP {

@@ -92,7 +92,7 @@ void ConeccionHTTP::run() {
         std::cout << "Cuerpo recibido: [" << body << "]" << std::endl;
 
         json responseJson;
-        responseJson["status"] = "active";
+       // responseJson["status"] = "active";
         responseJson["mensaje"] = u8"\u00A1Bienvenido al servidor Disk Controller!"; // Cadena UTF-8 explícita
         if (body.empty()) {
             std::cout << "Cuerpo de la solicitud vacío" << std::endl;
