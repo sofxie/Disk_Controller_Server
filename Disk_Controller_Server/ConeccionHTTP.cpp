@@ -110,10 +110,28 @@ void ConeccionHTTP::run() {
         try {
             json j = json::parse(body);
             std::cout << "JSON recibido: " << j.dump() << std::endl;
-            if (!j["nombre"].is_null()) {
-                std::cout << "Nombre: " << j["nombre"] << std::endl;
+
+            if (!j.contains("accion")) {
+                throw std::runtime_error("Falta el campo 'accion'");
             }
+
+            std::string accion = j["accion"];
+            if (accion == "save") {
+                CargarArchivo(j);
+            }
+            else if (accion == "delete") {
+                eliminardocu(j);
+            }
+            else if (accion == "search") {
+                obtenerdocu(j);
+            }
+            else {
+                std::cout << "Acción desconocida: " << accion << std::endl;
+                responseJson["error"] = "Acción desconocida";
+            }
+
             responseJson["eco"] = j;
+
         }
         catch (json::parse_error& e) {
             std::cout << "Error al parsear JSON: " << e.what() << std::endl;
@@ -127,6 +145,11 @@ void ConeccionHTTP::run() {
             closesocket(new_wsocket);
             continue;
         }
+        catch (std::exception& e) {
+            std::cout << "Error al procesar acción: " << e.what() << std::endl;
+            responseJson["error"] = e.what();
+        }
+
 
         std::string responseBody = responseJson.dump();
         std::string serverMessage =
@@ -152,4 +175,19 @@ void ConeccionHTTP::run() {
 
     closesocket(wsocket);
     WSACleanup();
+}
+
+void ConeccionHTTP::CargarArchivo(const json& data) {
+    std::cout << "Archivo cargado: " << data.dump() << std::endl;
+    // Lógica de registro
+}
+
+void ConeccionHTTP::obtenerdocu(const json& data) {
+    std::cout << "Obteniendo información: " << data.dump() << std::endl;
+    // Lógica de consulta
+}
+
+void ConeccionHTTP::eliminardocu(const json& data) {
+    std::cout << "Obteniendo información: " << data.dump() << std::endl;
+    // Lógica de consulta
 }
