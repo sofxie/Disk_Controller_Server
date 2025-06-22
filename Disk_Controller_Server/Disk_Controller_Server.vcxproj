@@ -125,6 +125,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="PDF_Reader_Compresion.cpp" />
     <ClCompile Include="RAID5.cpp" />
+    <ClCompile Include="RaidManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ConeccionHTTP.h" />
@@ -133,6 +134,7 @@
     </ClInclude>
     <ClInclude Include="PDF_Reader_Compresion.h" />
     <ClInclude Include="RAID5.h" />
+    <ClInclude Include="RaidManager.h" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Disk_Controller.resx">

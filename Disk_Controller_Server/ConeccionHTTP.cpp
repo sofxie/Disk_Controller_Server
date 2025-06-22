@@ -1,14 +1,13 @@
-#include "ConeccionHTTP.h"
-#include "json.hpp"
-using json = nlohmann::json;
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #pragma comment(lib,"ws2_32.lib")
+#include "ConeccionHTTP.h"
+#include "json.hpp"
 #include <WinSock2.h>
 #include <iostream>
 #include <string>
 #define addr "127.0.0.1" // Direccion del server con PDF App
 #define port 8080 // Puerto con PDF App
-using namespace std;
+using json = nlohmann::json;
 
 void ConeccionHTTP::run() {
 
@@ -24,10 +23,10 @@ void ConeccionHTTP::run() {
 	// Buffer Size
 	const int BUFFER_SIZE = 30720;
 
-	// Inicializa WinSock
-	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-		std::cout << "Error de Inicialización";
-	}
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+        std::cout << "Error de Inicialización: " << WSAGetLastError() << std::endl;
+        return;
+    }
 
 	// Crear socket
 	wsocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -36,11 +35,10 @@ void ConeccionHTTP::run() {
 		WSACleanup();
 	}
 
-	// Configurar direccion
-	server.sin_family = AF_INET;
-	server.sin_addr.s_addr = inet_addr(addr);
-	server.sin_port = htons(port);
-	server_len = sizeof(server);
+    server.sin_family = AF_INET;
+    server.sin_addr.s_addr = inet_addr(addr);
+    server.sin_port = htons(port);
+    server_len = sizeof(server);
 
 	// Asociar el socket con la dirección y el puerto
 	if (::bind(wsocket, (SOCKADDR*)&server, sizeof(server)) ==  SOCKET_ERROR) {
@@ -74,9 +72,21 @@ void ConeccionHTTP::run() {
 			closesocket(new_wsocket);
 			continue;
 		}
-
-		// Convertir buffer a string
 		std::string request(buff, bytes);
+        std::string method = request.substr(0, request.find(" "));
+        if (method != "POST") {
+            std::cout << "Método no permitido: " << method << std::endl;
+            std::string errorResponse =
+                "HTTP/1.1 405 Method Not Allowed\r\n"
+                "Content-Type: text/plain\r\n"
+                "Content-Length: 23\r\n"
+                "Connection: close\r\n"
+                "\r\n"
+                "Solo se permite POST";
+            send(new_wsocket, errorResponse.c_str(), errorResponse.size(), 0);
+            closesocket(new_wsocket);
+            continue;
+        }
 
 		// Buscar dónde empieza el cuerpo JSON 
 		size_t pos = request.find("\r\n\r\n");
@@ -125,7 +135,7 @@ void ConeccionHTTP::run() {
 		while (totalBytesSent < messageSize) {
 			int bytesSent = send(new_wsocket, serverMessage.c_str() + totalBytesSent, messageSize - totalBytesSent, 0);
 			if (bytesSent < 0) {
-				cout << "no se envio respuesta";
+				std::cout << "no se envio respuesta";
 			}
 			totalBytesSent += bytesSent;
 		}
@@ -143,13 +153,13 @@ void ConeccionHTTP::connectDiskNode(int Nodeport, const std::string& Nodeip) {
 	
 	// Inicializar WinSock
 	if (WSAStartup(MAKEWORD(2,2),&wsaData)!=0){
-		cout << "Error al iniciar Winsock";
+		std::cout << "Error al iniciar Winsock";
 	};
 
 	// Crear socket
 	clientSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (clientSocket == INVALID_SOCKET) {
-		cout << "No se pudo conectar al Socket";
+		std::cout << "No se pudo conectar al Socket";
 		WSACleanup();
 	}
 
@@ -160,7 +170,7 @@ void ConeccionHTTP::connectDiskNode(int Nodeport, const std::string& Nodeip) {
 
 	// Conectar al servidor
 	if (::connect(clientSocket, (SOCKADDR*)&server, sizeof(server)) < 0) {
-		cout << "No se conecto al server";
+		std::cout << "No se conecto al server";
 		closesocket(clientSocket);
 		WSACleanup();
 	}
@@ -186,8 +196,8 @@ void ConeccionHTTP::connectDiskNode(int Nodeport, const std::string& Nodeip) {
 	char buffer[4096];
 	int bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
 	if (bytesReceived > 0) {
-		cout << "Respuesta del servidor:\n";
-		cout << string(buffer, bytesReceived) << endl;
+		std::cout << "Respuesta del servidor:\n";
+		std::cout << std::string(buffer, bytesReceived) << std::endl;
 	}
 	// Cerrar conexión
 	closesocket(clientSocket);
