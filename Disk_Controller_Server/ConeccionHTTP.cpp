@@ -178,9 +178,41 @@ void ConeccionHTTP::run() {
 }
 
 void ConeccionHTTP::CargarArchivo(const json& data) {
-    std::cout << "Archivo cargado: " << data.dump() << std::endl;
-    // Lógica de registro
+    std::cout << "Cargando archivo desde JSON...\n";
+
+    if (!data.contains("contenido")) {
+        std::cerr << "JSON no contiene la ruta del PDF.\n";
+        return;
+    }
+
+    std::string rutaPDFOriginal = data["contenido"];
+    PDF_Reader_Compresion lector;
+
+    // Carpeta base fija
+    std::string rutaBase = "C:\\PDFR\\";
+    std::string RutaPDFNueva = rutaBase + lector.obtenerNombreBaseConTipo(rutaPDFOriginal);
+
+    // Copiar PDF a carpeta fija manteniendo nombre original
+    std::string rutaPDF = lector.copiarArchivo(rutaPDFOriginal, RutaPDFNueva);
+    if (rutaPDF.empty()) {
+        std::cerr << "Error: no se pudo copiar el archivo desde " << rutaPDFOriginal << "\n";
+        return;
+    }
+
+    // Procesar PDF y comprimir con Huffman
+    std::string resultado = lector.procesarPDFyGuardarHuffman(rutaPDF, rutaBase);
+    if (resultado.empty()) {
+        std::cerr << "Error: No se pudo procesar el PDF y comprimir.\n";
+        return;
+    }
+
+    // Mostrar resultado parcial en consola
+    std::cout << "Proceso completado. Resultado (inicio):\n" << resultado.substr(0, 50) << "...\n";
+
+    // Descomprimir y mostrar resultados
+    lector.DecomprimirFile(resultado, rutaBase, rutaPDF);
 }
+
 
 void ConeccionHTTP::obtenerdocu(const json& data) {
     std::cout << "Obteniendo información: " << data.dump() << std::endl;
@@ -188,6 +220,19 @@ void ConeccionHTTP::obtenerdocu(const json& data) {
 }
 
 void ConeccionHTTP::eliminardocu(const json& data) {
-    std::cout << "Obteniendo información: " << data.dump() << std::endl;
-    // Lógica de consulta
+    std::cout << "Eliminando documento desde JSON...\n";
+
+    if (!data.contains("contenido") || !data["contenido"].is_string()) {
+        std::cerr << "Error: JSON no contiene un campo 'contenido' válido.\n";
+        return;
+    }
+
+    std::string rutaPDF = data["contenido"];
+    std::string rutaBase = "C:\\PDFR\\";
+
+    PDF_Reader_Compresion lector;
+    lector.eliminarArchivosGenerados(rutaPDF, rutaBase);
+
+    std::cout << "Archivos relacionados eliminados correctamente para: " << rutaPDF << "\n";
 }
+
