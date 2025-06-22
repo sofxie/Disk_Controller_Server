@@ -1,17 +1,21 @@
-#include "json.hpp"
-#include <iostream>
-#include <vector>
+#include "RaidManager.h"
 #include "RAID5.h"
+#include "json.hpp"
+#include <vector>
 
 using json = nlohmann::json;
 
-// Simula el envío a cada nodo (debes reemplazar con socket o HTTP si es distribuido)
-void enviarABlockADiskNode(const std::string& mensajeJSON);
+void enviarABlockADiskNode(const std::string& mensajeJSON) {
+    // Simulación de envío
+    std::cout << "Enviando a nodo: " << mensajeJSON << std::endl;
+}
 
-void enviarBloquesARaidNodes(const std::string& textoCodificado, const std::string& nombrePDF) {
-    std::string bloque1, bloque2, bloque3, bloque4;
-    RAID5 raid5;
-    raid5.raid5Algorithm(textoCodificado, bloque1, bloque2, bloque3, bloque4);
+void enviarBloquesGeneradosARaidNodes(
+    const std::string& bloque1,
+    const std::string& bloque2,
+    const std::string& bloque3,
+    const std::string& bloque4,
+    const std::string& nombrePDF) {
 
     std::vector<std::string> bloques = { bloque1, bloque2, bloque3, bloque4 };
 
@@ -24,3 +28,4 @@ void enviarBloquesARaidNodes(const std::string& textoCodificado, const std::stri
         enviarABlockADiskNode(bloqueJson.dump());
     }
 }
+

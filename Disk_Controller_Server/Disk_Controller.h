@@ -256,7 +256,7 @@ namespace DiskControllerServer {
 				archivo3.close();
 				archivo4.close();
 
-				enviarBloquesARaidNodes(bloque1, bloque2, bloque3, bloque4, nombrePDF);
+				enviarBloquesGeneradosARaidNodes(bloque1, bloque2, bloque3, bloque4, nombrePDF);
 
 				std::cout << "Se logro almacenar los bloques con raid 5" << std::endl;
 			}
