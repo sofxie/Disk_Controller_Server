@@ -1,20 +1,29 @@
 ﻿#include "Disk_Controller.h"
 #include "ConeccionHTTP.h"
+#include <msclr/marshal_cppstd.h> // para String^
+#include <string>
 #include "PDF_Reader_Compresion.h"
 
 using namespace System;
 using namespace System::Windows::Forms;
 using namespace DiskControllerServer;
-
+using namespace msclr::interop;
 using namespace System::Threading;
 
 void RunServidorHTTP() {
 	ConeccionHTTP* conn = new ConeccionHTTP();
-	conn->run(); 
+	conn->run();
+}
+void ConectNode(int port, String^ ip) {
+	// convertir tipo string a String^
+	marshal_context context;
+	std::string  ip_std = context.marshal_as<std::string>(ip);
+	ConeccionHTTP* conn = new ConeccionHTTP();
+	conn->connectDiskNode(port, ip_std);
 }
 
 [STAThread]
-int main(array<String^>^ args) {
+int main(cli::array<String^>^ args) {
 
 	////////////
 
