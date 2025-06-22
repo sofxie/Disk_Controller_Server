@@ -27,6 +27,9 @@
     <ClCompile Include="PDF_Reader_Compresion.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="RaidManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Disk_Controller.h">
@@ -39,6 +42,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PDF_Reader_Compresion.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RaidManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
