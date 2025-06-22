@@ -147,7 +147,7 @@ namespace DiskControllerServer {
 			this->button1->TabIndex = 6;
 			this->button1->Text = L"Connect";
 			this->button1->UseVisualStyleBackColor = true;
-			this->button1->Click += gcnew System::EventHandler(this, &MyForm::button1_Click);
+			this->button1->Click += gcnew System::EventHandler(this, &MyForm::button3_Click);
 			// 
 			// MyForm
 			// 
@@ -168,28 +168,44 @@ namespace DiskControllerServer {
 
 		}
 #pragma endregion
-	private: System::Void textBox1_TextChanged(System::Object^ sender, System::EventArgs^ e) {
-	}
-	private: System::Void button2_Click(System::Object^ sender, System::EventArgs^ e) {
+		private: System::Void textBox1_TextChanged(System::Object^ sender, System::EventArgs^ e) {
+		}
+
+	private: System::Void button3_Click(System::Object^ sender, System::EventArgs^ e) {
+		using namespace msclr::interop;
 		String^ texto = textBox2->Text;
 		PDF_Reader_Compresion lector;
 
-		// Ruta del PDF que quieres procesar
-		std::string rutaPDF = msclr::interop::marshal_as<std::string>(texto);
+		// Convertir managed String^ a std::string 
+		// Aqui debe ir la direccion que manda sofi del pdf
+		std::string rutaPDFOriginal = "C:\\Users\\sofia\\Downloads\\Pruebba.pdf";
 
-		// Ruta base donde guardar archivos temporales y comprimidos
+		// Carpeta base fija
 		std::string rutaBase = "C:\\PDFR\\";
 
-		// Procesar PDF y comprimir usando Huffman
-		std::string resultado = lector.procesarPDFyGuardarHuffman(rutaPDF, rutaBase);
+		std::string RutaPDFNueva = rutaBase + lector.obtenerNombreBaseConTipo(rutaPDFOriginal);
 
-		if (resultado.empty()) {
-			std::cerr << "Error: No se pudo procesar el PDF y comprimir.\n";
+		// Copiar PDF a carpeta fija manteniendo nombre original
+		std::string rutaPDF = lector.copiarArchivo(rutaPDFOriginal, RutaPDFNueva);
+
+		if (rutaPDF.empty()) {
+			std::string mensaje = rutaPDFOriginal;
+			System::String^ msg = gcnew System::String(mensaje.c_str());
+			MessageBox::Show(msg, "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
 			return;
 		}
 
-		// El resultado es "codigo|textoCodificado"
-		std::cout << "Proceso completado. Resultado:\n" << resultado.substr(0, 50) << "...\n";
+		// Procesar PDF y comprimir Huffman
+		std::string resultado = lector.procesarPDFyGuardarHuffman(rutaPDF, rutaBase);
+
+		if (resultado.empty()) {
+			MessageBox::Show("Error: No se pudo procesar el PDF y comprimir.", "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
+			return;
+		}
+
+		// Opcional: mostrar resultado parcial en consola
+		std::cout << "Proceso completado. Resultado (inicio):\n" << resultado.substr(0, 50) << "...\n";
+
 
 		// ========== Aplicar el RAID 5  ==========
 		// Extraer solo el texto codificado (parte después del '|')
@@ -241,45 +257,6 @@ namespace DiskControllerServer {
 
 		// Descomprimir el texto codificado y mostrar resultados
 		lector.DecomprimirFile(resultado, rutaBase, rutaPDF);
-	}
-	private: System::Void button3_Click(System::Object^ sender, System::EventArgs^ e) {
-		String^ texto = textBox2->Text;
-		PDF_Reader_Compresion lector;
-
-		// Ruta del PDF que quieres procesar
-		std::string rutaPDF = msclr::interop::marshal_as<std::string>(texto);
-
-		// Ruta base donde guardar archivos temporales y comprimidos
-		std::string rutaBase = "C:\\PDFR\\";
-
-		lector.eliminarArchivosGenerados(rutaPDF, rutaBase);
-
-		// También eliminar archivos RAID5 si existen
-		std::string nombrePDF = obtenerNombreBaseLocal(rutaPDF);
-		std::vector<std::string> archivosRAID5 = {
-			rutaBase + "RAID5_" + nombrePDF + "_Bloque1.txt",
-			rutaBase + "RAID5_" + nombrePDF + "_Bloque2.txt",
-			rutaBase + "RAID5_" + nombrePDF + "_Bloque3.txt",
-			rutaBase + "RAID5_" + nombrePDF + "_Bloque4.txt"
-		};
-
-		for (const std::string& archivo : archivosRAID5) {
-			std::string comando = "del \"" + archivo + "\" 2>nul";
-			system(("cmd /C " + comando).c_str());
-		}
-
-		std::cout << "Archivos eliminados (incluyendo RAID5 si existían)." << std::endl;
-	}
-	private: System::Void button1_Click(System::Object^ sender, System::EventArgs^ e) {
-		try {
-			// Obtener datos del textbox
-			String^ IP = this->textBox1->Text;
-			int Port = System::Convert::ToInt32(this->textBox2->Text);
-
-		}
-		catch (System::Exception^ ex) {
-			cout << "Error" << endl;
-		}
 	}
 	};
 }
