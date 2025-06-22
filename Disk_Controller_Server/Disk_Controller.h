@@ -1,6 +1,12 @@
 #pragma once
+#include <string>
+#include <iostream>
+#include "ConeccionHTTP.h"
 #include "PDF_Reader_Compresion.h"
+#include "RAID5.h" 
 #include <msclr/marshal_cppstd.h>
+#include "RaidManager.h"
+using namespace std;
 
 namespace DiskControllerServer {
 
@@ -42,14 +48,24 @@ namespace DiskControllerServer {
 	private: System::Windows::Forms::TextBox^ textBox1;
 	private: System::Windows::Forms::TextBox^ textBox2;
 	private: System::Windows::Forms::Button^ button1;
-	private: System::Windows::Forms::Button^ button2;
-	private: System::Windows::Forms::Button^ button3;
+
+
 
 	private:
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
 		System::ComponentModel::Container^ components;
+
+		// Funci?n auxiliar para obtener nombre base del archivo
+		std::string obtenerNombreBaseLocal(const std::string& rutaPDF) {
+			size_t posBarra = rutaPDF.find_last_of("\\/");
+			size_t posPunto = rutaPDF.find_last_of(".");
+			if (posPunto == std::string::npos || posPunto < posBarra) {
+				posPunto = rutaPDF.length();
+			}
+			return rutaPDF.substr(posBarra + 1, posPunto - posBarra - 1);
+		}
 
 #pragma region Windows Form Designer generated code
 		/// <summary>
@@ -65,8 +81,6 @@ namespace DiskControllerServer {
 			this->textBox1 = (gcnew System::Windows::Forms::TextBox());
 			this->textBox2 = (gcnew System::Windows::Forms::TextBox());
 			this->button1 = (gcnew System::Windows::Forms::Button());
-			this->button2 = (gcnew System::Windows::Forms::Button());
-			this->button3 = (gcnew System::Windows::Forms::Button());
 			this->SuspendLayout();
 			// 
 			// label1
@@ -74,32 +88,29 @@ namespace DiskControllerServer {
 			this->label1->AutoSize = true;
 			this->label1->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 9.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->label1->Location = System::Drawing::Point(245, 28);
-			this->label1->Margin = System::Windows::Forms::Padding(4, 0, 4, 0);
+			this->label1->Location = System::Drawing::Point(218, 23);
 			this->label1->Name = L"label1";
-			this->label1->Size = System::Drawing::Size(80, 20);
+			this->label1->Size = System::Drawing::Size(25, 16);
 			this->label1->TabIndex = 0;
-			this->label1->Text = L"IP / Port :";
+			this->label1->Text = L"IP :";
 			// 
 			// label2
 			// 
 			this->label2->AutoSize = true;
 			this->label2->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 9.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->label2->Location = System::Drawing::Point(267, 57);
-			this->label2->Margin = System::Windows::Forms::Padding(4, 0, 4, 0);
+			this->label2->Location = System::Drawing::Point(206, 46);
 			this->label2->Name = L"label2";
-			this->label2->Size = System::Drawing::Size(58, 20);
+			this->label2->Size = System::Drawing::Size(40, 16);
 			this->label2->TabIndex = 1;
-			this->label2->Text = L"Path : ";
+			this->label2->Text = L"Port : ";
 			// 
 			// comboBox1
 			// 
 			this->comboBox1->FormattingEnabled = true;
-			this->comboBox1->Location = System::Drawing::Point(16, 58);
-			this->comboBox1->Margin = System::Windows::Forms::Padding(4);
+			this->comboBox1->Location = System::Drawing::Point(12, 47);
 			this->comboBox1->Name = L"comboBox1";
-			this->comboBox1->Size = System::Drawing::Size(192, 24);
+			this->comboBox1->Size = System::Drawing::Size(145, 21);
 			this->comboBox1->TabIndex = 2;
 			// 
 			// label3
@@ -107,69 +118,42 @@ namespace DiskControllerServer {
 			this->label3->AutoSize = true;
 			this->label3->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 9.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->label3->Location = System::Drawing::Point(16, 26);
-			this->label3->Margin = System::Windows::Forms::Padding(4, 0, 4, 0);
+			this->label3->Location = System::Drawing::Point(12, 21);
 			this->label3->Name = L"label3";
-			this->label3->Size = System::Drawing::Size(97, 20);
+			this->label3->Size = System::Drawing::Size(77, 16);
 			this->label3->TabIndex = 3;
 			this->label3->Text = L"Disk Node :";
 			// 
 			// textBox1
 			// 
-			this->textBox1->Location = System::Drawing::Point(345, 27);
-			this->textBox1->Margin = System::Windows::Forms::Padding(4);
+			this->textBox1->Location = System::Drawing::Point(259, 22);
 			this->textBox1->Name = L"textBox1";
-			this->textBox1->Size = System::Drawing::Size(417, 22);
+			this->textBox1->Size = System::Drawing::Size(314, 20);
 			this->textBox1->TabIndex = 4;
 			this->textBox1->TextChanged += gcnew System::EventHandler(this, &MyForm::textBox1_TextChanged);
 			// 
 			// textBox2
 			// 
-			this->textBox2->Location = System::Drawing::Point(345, 59);
-			this->textBox2->Margin = System::Windows::Forms::Padding(4);
+			this->textBox2->Location = System::Drawing::Point(259, 48);
 			this->textBox2->Name = L"textBox2";
-			this->textBox2->Size = System::Drawing::Size(417, 22);
+			this->textBox2->Size = System::Drawing::Size(314, 20);
 			this->textBox2->TabIndex = 5;
 			// 
 			// button1
 			// 
-			this->button1->Location = System::Drawing::Point(796, 48);
-			this->button1->Margin = System::Windows::Forms::Padding(4);
+			this->button1->Location = System::Drawing::Point(597, 39);
 			this->button1->Name = L"button1";
-			this->button1->Size = System::Drawing::Size(100, 28);
+			this->button1->Size = System::Drawing::Size(75, 23);
 			this->button1->TabIndex = 6;
 			this->button1->Text = L"Connect";
 			this->button1->UseVisualStyleBackColor = true;
-			// 
-			// button2
-			// 
-			this->button2->Location = System::Drawing::Point(796, 176);
-			this->button2->Margin = System::Windows::Forms::Padding(4);
-			this->button2->Name = L"button2";
-			this->button2->Size = System::Drawing::Size(100, 28);
-			this->button2->TabIndex = 7;
-			this->button2->Text = L"Add";
-			this->button2->UseVisualStyleBackColor = true;
-			this->button2->Click += gcnew System::EventHandler(this, &MyForm::button2_Click);
-			// 
-			// button3
-			// 
-			this->button3->Location = System::Drawing::Point(796, 112);
-			this->button3->Margin = System::Windows::Forms::Padding(4);
-			this->button3->Name = L"button3";
-			this->button3->Size = System::Drawing::Size(100, 28);
-			this->button3->TabIndex = 8;
-			this->button3->Text = L"Delete";
-			this->button3->UseVisualStyleBackColor = true;
-			this->button3->Click += gcnew System::EventHandler(this, &MyForm::button3_Click);
+			this->button1->Click += gcnew System::EventHandler(this, &MyForm::button3_Click);
 			// 
 			// MyForm
 			// 
-			this->AutoScaleDimensions = System::Drawing::SizeF(8, 16);
+			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(912, 567);
-			this->Controls->Add(this->button3);
-			this->Controls->Add(this->button2);
+			this->ClientSize = System::Drawing::Size(684, 461);
 			this->Controls->Add(this->button1);
 			this->Controls->Add(this->textBox2);
 			this->Controls->Add(this->textBox1);
@@ -177,7 +161,6 @@ namespace DiskControllerServer {
 			this->Controls->Add(this->comboBox1);
 			this->Controls->Add(this->label2);
 			this->Controls->Add(this->label1);
-			this->Margin = System::Windows::Forms::Padding(4);
 			this->Name = L"MyForm";
 			this->Text = L"Disk Controller";
 			this->ResumeLayout(false);
@@ -187,15 +170,15 @@ namespace DiskControllerServer {
 #pragma endregion
 	private: System::Void textBox1_TextChanged(System::Object^ sender, System::EventArgs^ e) {
 	}
-	private: System::Void button2_Click(System::Object^ sender, System::EventArgs^ e) {
-		using namespace msclr::interop;
 
+	private: System::Void button3_Click(System::Object^ sender, System::EventArgs^ e) {
+		using namespace msclr::interop;
 		String^ texto = textBox2->Text;
 		PDF_Reader_Compresion lector;
 
 		// Convertir managed String^ a std::string 
 		// Aqui debe ir la direccion que manda sofi del pdf
-		std::string rutaPDFOriginal = marshal_as<std::string>(texto);
+		std::string rutaPDFOriginal = "C:\\Users\\sofia\\Downloads\\Pruebba.pdf";
 
 		// Carpeta base fija
 		std::string rutaBase = "C:\\PDFR\\";
@@ -223,22 +206,57 @@ namespace DiskControllerServer {
 		// Opcional: mostrar resultado parcial en consola
 		std::cout << "Proceso completado. Resultado (inicio):\n" << resultado.substr(0, 50) << "...\n";
 
-		// Descomprimir y mostrar resultados
+
+		// ========== Aplicar el RAID 5  ==========
+		// Extraer solo el texto codificado (parte despu?s del '|')
+		size_t separador = resultado.find('|');
+		std::string textoCodificado = "";
+		if (separador != std::string::npos) {
+			textoCodificado = resultado.substr(separador + 1);
+		}
+
+		if (!textoCodificado.empty()) {
+			// Variables para almacenar los bloques finales
+			std::string bloque1, bloque2, bloque3, bloque4;
+
+			// Crear instancia de RAID5 y ejecutar el algoritmo
+			RAID5 raid5;
+			raid5.raid5Algorithm(textoCodificado, bloque1, bloque2, bloque3, bloque4);
+
+			// Obtener nombre base del PDF para los archivos RAID5
+			std::string nombrePDF = obtenerNombreBaseLocal(rutaPDF);
+
+			// Guardar los bloques en archivos separados
+			std::ofstream archivo1(rutaBase + "RAID5_" + nombrePDF + "_Bloque1.txt");
+			std::ofstream archivo2(rutaBase + "RAID5_" + nombrePDF + "_Bloque2.txt");
+			std::ofstream archivo3(rutaBase + "RAID5_" + nombrePDF + "_Bloque3.txt");
+			std::ofstream archivo4(rutaBase + "RAID5_" + nombrePDF + "_Bloque4.txt");
+
+			if (archivo1 && archivo2 && archivo3 && archivo4) {
+				archivo1 << bloque1;
+				archivo2 << bloque2;
+				archivo3 << bloque3;
+				archivo4 << bloque4;
+
+				archivo1.close();
+				archivo2.close();
+				archivo3.close();
+				archivo4.close();
+
+				enviarBloquesGeneradosARaidNodes(bloque1, bloque2, bloque3, bloque4, nombrePDF);
+
+				std::cout << "Se logro almacenar los bloques con raid 5" << std::endl;
+			}
+			else {
+				std::cerr << "Error: No se pudieron crear los archivos del raid" << std::endl;
+			}
+		}
+		else {
+			std::cerr << "Error: No hay texto codificado para aplicar raid." << std::endl;
+		}
+
+		// Descomprimir el texto codificado y mostrar resultados
 		lector.DecomprimirFile(resultado, rutaBase, rutaPDF);
-	}
-
-
-	private: System::Void button3_Click(System::Object^ sender, System::EventArgs^ e) {
-		String^ texto = textBox2->Text;
-		PDF_Reader_Compresion lector;
-
-		// Ruta del PDF que quieres procesar
-		std::string rutaPDF = msclr::interop::marshal_as<std::string>(texto);
-
-		// Ruta base donde guardar archivos temporales y comprimidos
-		std::string rutaBase = "C:\\PDFR\\";
-
-		lector.eliminarArchivosGenerados(rutaPDF, rutaBase);
 	}
 	};
 }

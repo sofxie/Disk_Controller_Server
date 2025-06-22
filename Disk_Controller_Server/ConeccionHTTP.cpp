@@ -3,75 +3,76 @@
 #include "ConeccionHTTP.h"
 #include "json.hpp"
 #include <WinSock2.h>
-#include <string>
 #include <iostream>
+#include <string>
+#define addr "127.0.0.1" // Direccion del server con PDF App
+#define port 8080 // Puerto con PDF App
 using json = nlohmann::json;
-#define addr "127.0.0.1"
-#define port 8080
 
 void ConeccionHTTP::run() {
-    SOCKET wsocket;
-    SOCKET new_wsocket;
-    WSADATA wsaData;
-    struct sockaddr_in server;
-    int server_len;
-    const int BUFFER_SIZE = 30720;
+
+	// Socket escuchar las conexiones
+	SOCKET wsocket;
+	// Socket para clientes aceptados
+	SOCKET new_wsocket;
+	// Inicializa WinSock
+	WSADATA wsaData;
+	// Almacenar direccion del server
+	struct sockaddr_in server;
+	int server_len;
+	// Buffer Size
+	const int BUFFER_SIZE = 30720;
 
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
         std::cout << "Error de Inicialización: " << WSAGetLastError() << std::endl;
         return;
     }
 
-    wsocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (wsocket == INVALID_SOCKET) {
-        std::cout << "Socket no creado: " << WSAGetLastError() << std::endl;
-        WSACleanup();
-        return;
-    }
+	// Crear socket
+	wsocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (wsocket == INVALID_SOCKET) {
+		std::cout << "Socket no creado";
+		WSACleanup();
+	}
 
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = inet_addr(addr);
     server.sin_port = htons(port);
     server_len = sizeof(server);
 
-    if (bind(wsocket, (SOCKADDR*)&server, server_len) == SOCKET_ERROR) {
-        std::cout << "Error en bind: " << WSAGetLastError() << std::endl;
-        closesocket(wsocket);
-        WSACleanup();
-        return;
-    }
+	// Asociar el socket con la dirección y el puerto
+	if (::bind(wsocket, (SOCKADDR*)&server, sizeof(server)) ==  SOCKET_ERROR) {
+		std::cout << "No se puede asociar el socket con la dirección." << std::endl;
+		closesocket(wsocket);
+		WSACleanup();
+		return;
+	}
 
-    if (listen(wsocket, 20) != 0) {
-        std::cout << "No se puede escuchar: " << WSAGetLastError() << std::endl;
-        closesocket(wsocket);
-        WSACleanup();
-        return;
-    }
+	// Escuchar en la direccion para aceptar conexiones
+	if (listen(wsocket, 20) != 0) {
+		std::cout << "No se puede escuchar";
+	}
 
-    char buff[BUFFER_SIZE] = { 0 };
-    while (true) {
-        new_wsocket = accept(wsocket, (SOCKADDR*)&server, &server_len);
-        if (new_wsocket == INVALID_SOCKET) {
-            std::cout << "No se pudo conectar: " << WSAGetLastError() << std::endl;
-            continue;
-        }
+	// Almacenar datos recibidos
+	char buff[BUFFER_SIZE] = { 0 };
 
-        std::string request;
-        memset(buff, 0, BUFFER_SIZE);
-        int bytes;
-        while ((bytes = recv(new_wsocket, buff, BUFFER_SIZE - 1, 0)) > 0) {
-            buff[bytes] = '\0';
-            request += buff;
-            if (request.find("\r\n\r\n") != std::string::npos) {
-                break;
-            }
-        }
-        if (bytes < 0) {
-            std::cout << "No se pudo leer request: " << WSAGetLastError() << std::endl;
-            closesocket(new_wsocket);
-            continue;
-        }
 
+	while (true) {
+		// Aceptar clientes
+		new_wsocket = accept(wsocket, (SOCKADDR*)&server, &server_len);
+		if (new_wsocket == INVALID_SOCKET) {
+			std::cout << "No se pudo conectar";
+			continue;
+		}
+
+		// Leer datos
+		int bytes = recv(new_wsocket, buff, BUFFER_SIZE, 0);
+		if (bytes < 0) {
+			std::cout << "no se pudo leer request";
+			closesocket(new_wsocket);
+			continue;
+		}
+		std::string request(buff, bytes);
         std::string method = request.substr(0, request.find(" "));
         if (method != "POST") {
             std::cout << "Método no permitido: " << method << std::endl;
@@ -87,12 +88,12 @@ void ConeccionHTTP::run() {
             continue;
         }
 
-        size_t pos = request.find("\r\n\r\n");
-        std::string body = (pos != std::string::npos) ? request.substr(pos + 4) : "";
-        std::cout << "Cuerpo recibido: [" << body << "]" << std::endl;
+		// Buscar dónde empieza el cuerpo JSON 
+		size_t pos = request.find("\r\n\r\n");
+		std::string body = (pos != std::string::npos) ? request.substr(pos + 4) : "";
 
         json responseJson;
-       // responseJson["status"] = "active";
+        responseJson["status"] = "active";
         responseJson["mensaje"] = u8"\u00A1Bienvenido al servidor Disk Controller!"; // Cadena UTF-8 explícita
         if (body.empty()) {
             std::cout << "Cuerpo de la solicitud vacío" << std::endl;
@@ -123,8 +124,8 @@ void ConeccionHTTP::run() {
                 eliminardocu(j);
             }
             else if (accion == "search") {
-                obtenerdocu(j);
-            }
+                odtenerdocu(j);
+			}
             else {
                 std::cout << "Acción desconocida: " << accion << std::endl;
                 responseJson["error"] = "Acción desconocida";
@@ -150,7 +151,6 @@ void ConeccionHTTP::run() {
             responseJson["error"] = e.what();
         }
 
-
         std::string responseBody = responseJson.dump();
         std::string serverMessage =
             "HTTP/1.1 200 OK\r\n"
@@ -160,31 +160,91 @@ void ConeccionHTTP::run() {
             "\r\n" +
             responseBody;
 
-        int totalBytesSent = 0;
-        int messageSize = serverMessage.size();
-        while (totalBytesSent < messageSize) {
-            int bytesSent = send(new_wsocket, serverMessage.c_str() + totalBytesSent, messageSize - totalBytesSent, 0);
-            if (bytesSent <= 0) {
-                std::cout << "Error al enviar respuesta: " << WSAGetLastError() << std::endl;
-                break;
-            }
-            totalBytesSent += bytesSent;
-        }
-        closesocket(new_wsocket);
+		int totalBytesSent = 0;
+		int messageSize = serverMessage.size();
+		// Enviar respueta
+		while (totalBytesSent < messageSize) {
+			int bytesSent = send(new_wsocket, serverMessage.c_str() + totalBytesSent, messageSize - totalBytesSent, 0);
+			if (bytesSent < 0) {
+				std::cout << "no se envio respuesta";
+			}
+			totalBytesSent += bytesSent;
+		}
+		closesocket(new_wsocket);
+	}
+
+	WSACleanup();
+
+}
+
+void ConeccionHTTP::connectDiskNode(int Nodeport, const std::string& Nodeip) {
+    WSADATA wsaData;
+    SOCKET clientSocket;
+    struct sockaddr_in server;
+
+    // Inicializar WinSock
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+        std::cout << "Error al iniciar Winsock";
+    };
+
+    // Crear socket
+    clientSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (clientSocket == INVALID_SOCKET) {
+        std::cout << "No se pudo conectar al Socket";
+        WSACleanup();
     }
 
-    closesocket(wsocket);
+    // Consigurar direccion 
+    server.sin_family = AF_INET;
+    server.sin_port = htons(port);
+    server.sin_addr.s_addr = inet_addr(Nodeip.c_str());
+
+    // Conectar al servidor
+    if (::connect(clientSocket, (SOCKADDR*)&server, sizeof(server)) < 0) {
+        std::cout << "No se conecto al server";
+        closesocket(clientSocket);
+        WSACleanup();
+    }
+
+    // Armar JSON
+    // Ejemplo de mensaje
+    std::string jBody = R"({"comando":"guardar","contenido": "Hola desde el DisskControler"})";
+
+    // Construir encabezado HTTP
+    std::string request =
+        "POST / HTTP/1.1\r\n"
+        "Host: " + Nodeip + "\r\n"
+        "Content-Type: application/json\r\n"
+        "Content-Length: " + std::to_string(jBody.length()) + "\r\n"
+        "Connection: close\r\n"
+        "\r\n" +
+        jBody;
+
+    // Enviar soli
+    send(clientSocket, request.c_str(), request.length(), 0);
+
+    // Recibir respuesta
+    char buffer[4096];
+    int bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
+    if (bytesReceived > 0) {
+        std::cout << "Respuesta del servidor:\n";
+        std::cout << std::string(buffer, bytesReceived) << std::endl;
+    }
+    // Cerrar conexión
+    closesocket(clientSocket);
     WSACleanup();
 }
 
 void ConeccionHTTP::CargarArchivo(const json& data) {
     std::cout << "Cargando archivo desde JSON...\n";
 
-    if (!data.contains("contenido")) {
-        std::cerr << "JSON no contiene la ruta del PDF.\n";
+    // Validar que exista el campo "contenido"
+    if (!data.contains("contenido") || !data["contenido"].is_string()) {
+        std::cerr << "Error: JSON no contiene un campo 'contenido' válido.\n";
         return;
     }
 
+    // Obtener ruta del archivo desde el JSON
     std::string rutaPDFOriginal = data["contenido"];
     PDF_Reader_Compresion lector;
 
@@ -192,7 +252,7 @@ void ConeccionHTTP::CargarArchivo(const json& data) {
     std::string rutaBase = "C:\\PDFR\\";
     std::string RutaPDFNueva = rutaBase + lector.obtenerNombreBaseConTipo(rutaPDFOriginal);
 
-    // Copiar PDF a carpeta fija manteniendo nombre original
+    // Copiar PDF a carpeta fija
     std::string rutaPDF = lector.copiarArchivo(rutaPDFOriginal, RutaPDFNueva);
     if (rutaPDF.empty()) {
         std::cerr << "Error: no se pudo copiar el archivo desde " << rutaPDFOriginal << "\n";
@@ -206,15 +266,68 @@ void ConeccionHTTP::CargarArchivo(const json& data) {
         return;
     }
 
-    // Mostrar resultado parcial en consola
+    // Mostrar un resumen del resultado
     std::cout << "Proceso completado. Resultado (inicio):\n" << resultado.substr(0, 50) << "...\n";
 
-    // Descomprimir y mostrar resultados
+    // mostrar resultado parcial en consola
+    std::cout << "Proceso completado. Resultado (inicio):\n" << resultado.substr(0, 50) << "...\n";
+
+
+    // ========== Aplicar el RAID 5  ==========
+    // Extraer solo el texto codificado (parte despu?s del '|')
+    size_t separador = resultado.find('|');
+    std::string textoCodificado = "";
+    if (separador != std::string::npos) {
+        textoCodificado = resultado.substr(separador + 1);
+    }
+
+    if (!textoCodificado.empty()) {
+        // Variables para almacenar los bloques finales
+        std::string bloque1, bloque2, bloque3, bloque4;
+
+        // Crear instancia de RAID5 y ejecutar el algoritmo
+        RAID5 raid5;
+        raid5.raid5Algorithm(textoCodificado, bloque1, bloque2, bloque3, bloque4);
+
+        // Obtener nombre base del PDF para los archivos RAID5
+        std::string nombrePDF = data["nombre"];
+
+        // Guardar los bloques en archivos separados
+        std::ofstream archivo1(rutaBase + "RAID5_" + nombrePDF + "_Bloque1.txt");
+        std::ofstream archivo2(rutaBase + "RAID5_" + nombrePDF + "_Bloque2.txt");
+        std::ofstream archivo3(rutaBase + "RAID5_" + nombrePDF + "_Bloque3.txt");
+        std::ofstream archivo4(rutaBase + "RAID5_" + nombrePDF + "_Bloque4.txt");
+
+        if (archivo1 && archivo2 && archivo3 && archivo4) {
+            archivo1 << bloque1;
+            archivo2 << bloque2;
+            archivo3 << bloque3;
+            archivo4 << bloque4;
+
+            archivo1.close();
+            archivo2.close();
+            archivo3.close();
+            archivo4.close();
+
+            enviarBloquesGeneradosARaidNodes(bloque1, bloque2, bloque3, bloque4, nombrePDF);
+
+            std::cout << "Se logro almacenar los bloques con raid 5" << std::endl;
+        }
+        else {
+            std::cerr << "Error: No se pudieron crear los archivos del raid" << std::endl;
+        }
+    }
+    else {
+        std::cerr << "Error: No hay texto codificado para aplicar raid." << std::endl;
+    }
+
+    // Descomprimir el texto codificado y mostrar resultados
     lector.DecomprimirFile(resultado, rutaBase, rutaPDF);
 }
 
 
-void ConeccionHTTP::obtenerdocu(const json& data) {
+
+void ConeccionHTTP::odtenerdocu(const json& data) {
     std::cout << "Obteniendo información: " << data.dump() << std::endl;
     // Lógica de consulta
 }
@@ -235,4 +348,5 @@ void ConeccionHTTP::eliminardocu(const json& data) {
 
     std::cout << "Archivos relacionados eliminados correctamente para: " << rutaPDF << "\n";
 }
+
 
