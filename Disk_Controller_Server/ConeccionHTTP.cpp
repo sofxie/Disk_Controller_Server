@@ -178,62 +178,138 @@ void ConeccionHTTP::run() {
 }
 
 void ConeccionHTTP::connectDiskNode(int Nodeport, const std::string& Nodeip) {
-    WSADATA wsaData;
-    SOCKET clientSocket;
-    struct sockaddr_in server;
+	WSADATA wsaData;
+	SOCKET clientSocket;
+	struct sockaddr_in server;
 
-    // Inicializar WinSock
-    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-        std::cout << "Error al iniciar Winsock";
-    };
+	// Inicializar WinSock
+	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+		std::cout << "Error al iniciar Winsock";
+	};
 
-    // Crear socket
-    clientSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (clientSocket == INVALID_SOCKET) {
-        std::cout << "No se pudo conectar al Socket";
-        WSACleanup();
-    }
+	// Crear socket
+	clientSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (clientSocket == INVALID_SOCKET) {
+		std::cout << "No se pudo conectar al Socket";
+		WSACleanup();
+	}
 
-    // Consigurar direccion 
-    server.sin_family = AF_INET;
-    server.sin_port = htons(port);
-    server.sin_addr.s_addr = inet_addr(Nodeip.c_str());
+	// Consigurar direccion 
+	server.sin_family = AF_INET;
+	server.sin_port = htons(port);
+	server.sin_addr.s_addr = inet_addr(Nodeip.c_str());
 
-    // Conectar al servidor
-    if (::connect(clientSocket, (SOCKADDR*)&server, sizeof(server)) < 0) {
-        std::cout << "No se conecto al server";
-        closesocket(clientSocket);
-        WSACleanup();
-    }
+	// Conectar al servidor
+	if (::connect(clientSocket, (SOCKADDR*)&server, sizeof(server)) < 0) {
+		std::cout << "No se conecto al server";
+		closesocket(clientSocket);
+		WSACleanup();
+	}
 
-    // Armar JSON
-    // Ejemplo de mensaje
-    std::string jBody = R"({"comando":"guardar","contenido": "Hola desde el DisskControler"})";
+	// Armar JSON
+	// Ejemplo de mensaje
+	std::string jBody = R"({"comando":"guardar","contenido": "Hola desde el DisskControler"})";
 
-    // Construir encabezado HTTP
-    std::string request =
-        "POST / HTTP/1.1\r\n"
-        "Host: " + Nodeip + "\r\n"
-        "Content-Type: application/json\r\n"
-        "Content-Length: " + std::to_string(jBody.length()) + "\r\n"
-        "Connection: close\r\n"
-        "\r\n" +
-        jBody;
+	// Construir encabezado HTTP
+	std::string request =
+		"POST / HTTP/1.1\r\n"
+		"Host: " + Nodeip + "\r\n"
+		"Content-Type: application/json\r\n"
+		"Content-Length: " + std::to_string(jBody.length()) + "\r\n"
+		"Connection: close\r\n"
+		"\r\n" +
+		jBody;
 
-    // Enviar soli
-    send(clientSocket, request.c_str(), request.length(), 0);
+	// Enviar soli
+	send(clientSocket, request.c_str(), request.length(), 0);
 
-    // Recibir respuesta
-    char buffer[4096];
-    int bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
-    if (bytesReceived > 0) {
-        std::cout << "Respuesta del servidor:\n";
-        std::cout << std::string(buffer, bytesReceived) << std::endl;
-    }
-    // Cerrar conexión
-    closesocket(clientSocket);
-    WSACleanup();
+	// Recibir respuesta
+	char buffer[4096];
+	int bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
+	if (bytesReceived > 0) {
+		std::cout << "Respuesta del servidor:\n";
+		std::cout << std::string(buffer, bytesReceived) << std::endl;
+	}
+	// Cerrar conexión
+	closesocket(clientSocket);
+	WSACleanup();
 }
+
+
+std::string ConeccionHTTP::sendStatusToNode(const std::string& nodeIP, int nodePort) {
+	std::cout << "aca";
+	WSADATA wsaData;
+	SOCKET clientSocket;
+	struct sockaddr_in server;
+	std::string responseString;
+
+	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+		return "Error al iniciar Winsock";
+	}
+
+	clientSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (clientSocket == INVALID_SOCKET) {
+		WSACleanup();
+		return "No se pudo crear el socket";
+	}
+
+	server.sin_family = AF_INET;
+	server.sin_port = htons(nodePort);
+	server.sin_addr.s_addr = inet_addr(nodeIP.c_str());
+
+	if (::connect(clientSocket, (SOCKADDR*)&server, sizeof(server)) < 0) {
+		closesocket(clientSocket);
+		WSACleanup();
+		return "No se pudo conectar al nodo " + nodeIP + ":" + std::to_string(nodePort);
+	}
+
+	// Crear JSON
+	json jBody;
+	jBody["comando"] = "status";
+
+	std::string jBodyStr = jBody.dump();
+
+	std::string request =
+		"POST / HTTP/1.1\r\n"
+		"Host: " + nodeIP + "\r\n"
+		"Content-Type: application/json\r\n"
+		"Content-Length: " + std::to_string(jBodyStr.length()) + "\r\n"
+		"Connection: close\r\n"
+		"\r\n" +
+		jBodyStr;
+
+	send(clientSocket, request.c_str(), request.length(), 0);
+	// Recibir respuesta
+	char buffer[8192] = { 0 };
+	int bytesReceived = recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
+	if (bytesReceived <= 0) {
+		closesocket(clientSocket);
+		WSACleanup();
+		return "No se recibió respuesta del nodo.";
+	}
+
+	std::string rawResponse(buffer, bytesReceived);
+
+	// Extraer solo el cuerpo del JSON (después del doble salto de línea)
+	size_t pos = rawResponse.find("\r\n\r\n");
+	if (pos == std::string::npos) {
+		closesocket(clientSocket);
+		WSACleanup();
+		return "Respuesta HTTP inválida.";
+	}
+
+	std::string jsonResponse = rawResponse.substr(pos + 4);
+
+	closesocket(clientSocket);
+	WSACleanup();
+
+	return jsonResponse;
+}
+
+
+
+/// Comandos
+
 
 void ConeccionHTTP::CargarArchivo(const json& data) {
     std::cout << "Cargando archivo desde JSON...\n";
@@ -347,88 +423,4 @@ void ConeccionHTTP::eliminardocu(const json& data) {
     lector.eliminarArchivosGenerados(rutaPDF, rutaBase);
 
     std::cout << "Archivos relacionados eliminados correctamente para: " << rutaPDF << "\n";
-}
-
-
-	// Recibir respuesta
-	char buffer[4096];
-	int bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
-	if (bytesReceived > 0) {
-		std::cout << "Respuesta del servidor:\n";
-		std::cout << std::string(buffer, bytesReceived) << std::endl;
-	}
-	// Cerrar conexión
-	closesocket(clientSocket);
-	WSACleanup();
-}
-
-
-std::string ConeccionHTTP::sendStatusToNode(const std::string& nodeIP, int nodePort) {
-	std::cout << "aca";
-	WSADATA wsaData;
-	SOCKET clientSocket;
-	struct sockaddr_in server;
-	std::string responseString;
-
-	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-		return "Error al iniciar Winsock";
-	}
-
-	clientSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (clientSocket == INVALID_SOCKET) {
-		WSACleanup();
-		return "No se pudo crear el socket";
-	}
-
-	server.sin_family = AF_INET;
-	server.sin_port = htons(nodePort);
-	server.sin_addr.s_addr = inet_addr(nodeIP.c_str());
-
-	if (::connect(clientSocket, (SOCKADDR*)&server, sizeof(server)) < 0) {
-		closesocket(clientSocket);
-		WSACleanup();
-		return "No se pudo conectar al nodo " + nodeIP + ":" + std::to_string(nodePort);
-	}
-
-	// Crear JSON
-	json jBody;
-	jBody["comando"] = "status";
-
-	std::string jBodyStr = jBody.dump();
-
-	std::string request =
-		"POST / HTTP/1.1\r\n"
-		"Host: " + nodeIP + "\r\n"
-		"Content-Type: application/json\r\n"
-		"Content-Length: " + std::to_string(jBodyStr.length()) + "\r\n"
-		"Connection: close\r\n"
-		"\r\n" +
-		jBodyStr;
-
-	send(clientSocket, request.c_str(), request.length(), 0);
-	// Recibir respuesta
-	char buffer[8192] = { 0 };
-	int bytesReceived = recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
-	if (bytesReceived <= 0) {
-		closesocket(clientSocket);
-		WSACleanup();
-		return "No se recibió respuesta del nodo.";
-	}
-
-	std::string rawResponse(buffer, bytesReceived);
-
-	// Extraer solo el cuerpo del JSON (después del doble salto de línea)
-	size_t pos = rawResponse.find("\r\n\r\n");
-	if (pos == std::string::npos) {
-		closesocket(clientSocket);
-		WSACleanup();
-		return "Respuesta HTTP inválida.";
-	}
-
-	std::string jsonResponse = rawResponse.substr(pos + 4);
-
-	closesocket(clientSocket);
-	WSACleanup();
-
-	return jsonResponse;
 }
