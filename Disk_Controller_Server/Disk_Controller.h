@@ -2,6 +2,7 @@
 #include "PDF_Reader_Compresion.h"
 #include "RAID5.h" 
 #include <msclr/marshal_cppstd.h>
+#include "RaidManager.h"
 
 namespace DiskControllerServer {
 
@@ -254,6 +255,8 @@ namespace DiskControllerServer {
 				archivo2.close();
 				archivo3.close();
 				archivo4.close();
+
+				enviarBloquesARaidNodes(bloque1, bloque2, bloque3, bloque4, nombrePDF);
 
 				std::cout << "Se logro almacenar los bloques con raid 5" << std::endl;
 			}
