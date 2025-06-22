@@ -276,7 +276,7 @@ namespace DiskControllerServer {
 
 		// Convertir managed String^ a std::string 
 		// Aqui debe ir la direccion que manda sofi del pdf
-		std::string rutaPDFOriginal = "C:\\Users\\sofia\\Downloads\\Pruebba.pdf";
+		std::string rutaPDFOriginal = marshal_as<std::string>(texto);
 
 		// Carpeta base fija
 		std::string rutaBase = "C:\\PDFR\\";
