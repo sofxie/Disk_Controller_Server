@@ -11,7 +11,7 @@ using json = nlohmann::json;
 using namespace std;
 
 void ConeccionHTTP::run() {
-	std::cout << "Hola";
+
 	// Socket escuchar las conexiones
 	SOCKET wsocket;
 	// Socket para clientes aceptados
@@ -100,7 +100,6 @@ void ConeccionHTTP::run() {
 				if (!j["contenido"].is_null()) {
 					std::cout << "Contenido: " << j["contenido"] << std::endl;
 				}
-				std::cout << "JSON recibido: " << j.dump() << std::endl;
 			}
 			catch (json::parse_error& e) {
 				// Error de parse
