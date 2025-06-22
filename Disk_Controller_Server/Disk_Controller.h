@@ -49,9 +49,9 @@
 			/// <summary>
 			/// Required designer variable.
 			/// </summary>
-			System::ComponentModel::Container ^components;
+			System::ComponentModel::Container^ components;
 
-	#pragma region Windows Form Designer generated code
+#pragma region Windows Form Designer generated code
 			/// <summary>
 			/// Required method for Designer support - do not modify
 			/// the contents of this method with the code editor.
@@ -185,33 +185,49 @@
 
 			}
 #pragma endregion
-	private: System::Void textBox1_TextChanged(System::Object^ sender, System::EventArgs^ e) {
-	}
-	private: System::Void button2_Click(System::Object^ sender, System::EventArgs^ e) {
-		String^ texto = textBox2->Text;
-		PDF_Reader_Compresion lector;
-
-		// Ruta del PDF que quieres procesar
-		std::string rutaPDF = msclr::interop::marshal_as<std::string>(texto);
-
-		// Ruta base donde guardar archivos temporales y comprimidos
-		std::string rutaBase = "C:\\PDFR\\";
-
-		// Procesar PDF y comprimir usando Huffman
-		std::string resultado = lector.procesarPDFyGuardarHuffman(rutaPDF, rutaBase);
-
-		if (resultado.empty()) {
-			std::cerr << "Error: No se pudo procesar el PDF y comprimir.\n";
+		private: System::Void textBox1_TextChanged(System::Object^ sender, System::EventArgs^ e) {
 		}
+		private: System::Void button2_Click(System::Object^ sender, System::EventArgs^ e) {
+			using namespace msclr::interop;
 
-		// El resultado es "codigo|textoCodificado"
-		std::cout << "Proceso completado. Resultado:\n" << resultado.substr(0, 50) << "...\n";
+			String^ texto = textBox2->Text;
+			PDF_Reader_Compresion lector;
 
-		// Descomprimir el texto codificado y mostrar resultados
-		lector.DecomprimirFile(resultado, rutaBase, rutaPDF);
+			// Convertir managed String^ a std::string 
+			// Aqui debe ir la direccion que manda sofi del pdf
+			std::string rutaPDFOriginal = marshal_as<std::string>(texto);
 
+			// Carpeta base fija
+			std::string rutaBase = "C:\\PDFR\\";
 
-	}
+			std::string RutaPDFNueva = rutaBase + lector.obtenerNombreBaseConTipo(rutaPDFOriginal);
+
+			// Copiar PDF a carpeta fija manteniendo nombre original
+			std::string rutaPDF = lector.copiarArchivo(rutaPDFOriginal, RutaPDFNueva);
+
+			if (rutaPDF.empty()) {
+				std::string mensaje = rutaPDFOriginal;
+				System::String^ msg = gcnew System::String(mensaje.c_str());
+				MessageBox::Show(msg, "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
+				return;
+			}
+
+			// Procesar PDF y comprimir Huffman
+			std::string resultado = lector.procesarPDFyGuardarHuffman(rutaPDF, rutaBase);
+
+			if (resultado.empty()) {
+				MessageBox::Show("Error: No se pudo procesar el PDF y comprimir.", "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
+				return;
+			}
+
+			// Opcional: mostrar resultado parcial en consola
+			std::cout << "Proceso completado. Resultado (inicio):\n" << resultado.substr(0, 50) << "...\n";
+
+			// Descomprimir y mostrar resultados
+			lector.DecomprimirFile(resultado, rutaBase, rutaPDF);
+		}
+		
+
 private: System::Void button3_Click(System::Object^ sender, System::EventArgs^ e) {
 	String^ texto = textBox2->Text;
 	PDF_Reader_Compresion lector;

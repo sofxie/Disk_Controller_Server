@@ -232,7 +232,8 @@ void PDF_Reader_Compresion::eliminarArchivosGenerados(const std::string& rutaPDF
         rutaBase + nombrePDF + "_*.txt", // comodín para nombres generados como: reporte_123456.txt
         rutaBase + "TablaCodigosHuffman" + nombrePDF + ".txt",
         rutaBase + "Textocomprimido" + nombrePDF + ".txt",
-        rutaBase + "TextoDescomprimido" + nombrePDF + ".txt"
+        rutaBase + "TextoDescomprimido" + nombrePDF + ".txt",
+        rutaBase + nombrePDF + ".pdf"
     };
 
     for (const std::string& patron : extensiones) {
@@ -240,7 +241,6 @@ void PDF_Reader_Compresion::eliminarArchivosGenerados(const std::string& rutaPDF
         system(("cmd /C " + comando).c_str());
     }
 }
-
 
 std::string PDF_Reader_Compresion::obtenerNombreBase(const std::string& rutaPDF) {
     size_t posBarra = rutaPDF.find_last_of("\\/");
@@ -251,4 +251,30 @@ std::string PDF_Reader_Compresion::obtenerNombreBase(const std::string& rutaPDF)
     return rutaPDF.substr(posBarra + 1, posPunto - posBarra - 1);
 }
 
+#include <fstream>
+#include <sys/stat.h>
+#include <windows.h>
 
+std::string PDF_Reader_Compresion::obtenerNombreBaseConTipo(const std::string& ruta) {
+    size_t pos = ruta.find_last_of("\\/");
+    if (pos == std::string::npos)
+        return ruta;
+    return ruta.substr(pos + 1);
+}
+
+std::string PDF_Reader_Compresion::copiarArchivo(const std::string& origen, const std::string& destino) {
+    std::ifstream archivoOrigen(origen, std::ios::binary);
+    std::ofstream archivoDestino(destino, std::ios::binary);
+
+    if (!archivoOrigen) {
+        std::cerr << "No se pudo abrir el archivo de origen.\n";
+        return "";  // o podrías devolver un mensaje de error
+    }
+    if (!archivoDestino) {
+        std::cerr << "No se pudo crear el archivo de destino.\n";
+        return "";
+    }
+
+    archivoDestino << archivoOrigen.rdbuf();  // Copiar contenido binario
+    return destino;  // Devuelve la ruta del archivo copiado
+}
