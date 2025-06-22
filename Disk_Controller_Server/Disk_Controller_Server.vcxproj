@@ -123,12 +123,16 @@
   <ItemGroup>
     <ClCompile Include="ConeccionHTTP.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="PDF_Reader_Compresion.cpp" />
+    <ClCompile Include="RAID5.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ConeccionHTTP.h" />
     <ClInclude Include="Disk_Controller.h">
       <FileType>CppForm</FileType>
     </ClInclude>
+    <ClInclude Include="PDF_Reader_Compresion.h" />
+    <ClInclude Include="RAID5.h" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Disk_Controller.resx">

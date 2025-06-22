@@ -1,7 +1,8 @@
-#include "Disk_Controller.h"
+﻿#include "Disk_Controller.h"
 #include "ConeccionHTTP.h"
 #include <msclr/marshal_cppstd.h> // para String^
 #include <string>
+#include "PDF_Reader_Compresion.h"
 
 using namespace System;
 using namespace System::Windows::Forms;
@@ -24,6 +25,8 @@ void ConectNode(int port, String^ ip) {
 [STAThread]
 int main(cli::array<String^>^ args) {
 
+	////////////
+
 	// Para iniciar la interfaz
 	Application::EnableVisualStyles();
 	Application::SetCompatibleTextRenderingDefault(false);
@@ -31,7 +34,6 @@ int main(cli::array<String^>^ args) {
 	MyForm^ form = gcnew MyForm();
 
 	// Crear e iniciar hilo para el servidor HTTP
-	cout << "Presente";
 	Thread^ serverThread = gcnew Thread(gcnew ThreadStart(&RunServidorHTTP));
 	serverThread->IsBackground = true; // Se cierra junto con la app
 	serverThread->Start();
