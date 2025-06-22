@@ -16,6 +16,9 @@ public:
     std::string procesarPDFyGuardarHuffman(const std::string& rutaPDF, const std::string& rutaBase);
     void DecomprimirFile(std::string fileComprimido, std::string rutaBase, std::string rutaPDF);
     void eliminarArchivosGenerados(const std::string& rutaPDF, const std::string& rutaBase);
+    std::string copiarArchivo(const std::string& origen, const std::string& destino);
+    std::string obtenerNombreBaseConTipo(const std::string& rutaPDF);
+
 
 private:
     struct Nodo {
@@ -47,6 +50,8 @@ private:
     std::shared_ptr<Nodo> reconstruirArbolDesdeTabla(const std::unordered_map<char, std::string>& codigos);
     std::string decodificarTexto(const std::string& textoCodificado, std::shared_ptr<Nodo> arbol);
     std::string obtenerNombreBase(const std::string& rutaPDF);
+
+
 
 };
 

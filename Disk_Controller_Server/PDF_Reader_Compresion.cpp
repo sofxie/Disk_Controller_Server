@@ -63,7 +63,7 @@ std::string PDF_Reader_Compresion::procesarPDFyGuardarHuffman(const std::string&
     int resultado = system(comando.c_str());
 
     if (resultado != 0) {
-        std::cerr << "Error al ejecutar PowerShell. Código de error: " << resultado << "\n";
+        std::cerr << "Error al ejecutar PowerShell. C?digo de error: " << resultado << "\n";
         return "";
     }
 
@@ -85,7 +85,7 @@ std::string PDF_Reader_Compresion::procesarPDFyGuardarHuffman(const std::string&
     std::string archivoSalidaHuff = rutaBase + "TablaCodigosHuffman" + nombrePDF + ".txt";
     std::ofstream tablaSalida(archivoSalidaHuff);
     if (!tablaSalida) {
-        std::cerr << "Error: No se pudo crear el archivo de la tabla de códigos.\n";
+        std::cerr << "Error: No se pudo crear el archivo de la tabla de c?digos.\n";
         return "";
     }
 
@@ -192,7 +192,7 @@ void PDF_Reader_Compresion::DecomprimirFile(std::string fileComprimido, std::str
     std::string textoCodificado = fileComprimido.substr(separador + 1);
 
     if (fileComprimido.empty()) {
-        std::cerr << "Error: No se generó texto codificado.\n";
+        std::cerr << "Error: No se gener? texto codificado.\n";
         return;
     }
 
@@ -201,7 +201,7 @@ void PDF_Reader_Compresion::DecomprimirFile(std::string fileComprimido, std::str
     std::string rutaTabla = rutaBase + "TablaCodigosHuffman" + nombrePDF + ".txt";
     std::unordered_map<char, std::string> tabla = leerTablaHuffman(rutaTabla);
     if (tabla.empty()) {
-        std::cerr << "No se pudo leer la tabla Huffman o está vacía.\n";
+        std::cerr << "No se pudo leer la tabla Huffman o est? vac?a.\n";
         return;
     }
 
@@ -229,7 +229,7 @@ void PDF_Reader_Compresion::eliminarArchivosGenerados(const std::string& rutaPDF
 
     // Buscamos los archivos que empiezan con el nombre del PDF y terminan en .txt
     std::vector<std::string> extensiones = {
-        rutaBase + nombrePDF + "_*.txt", // comodín para nombres generados como: reporte_123456.txt
+        rutaBase + nombrePDF + "_*.txt", // comod?n para nombres generados como: reporte_123456.txt
         rutaBase + "TablaCodigosHuffman" + nombrePDF + ".txt",
         rutaBase + "Textocomprimido" + nombrePDF + ".txt",
         rutaBase + "TextoDescomprimido" + nombrePDF + ".txt",
@@ -268,7 +268,7 @@ std::string PDF_Reader_Compresion::copiarArchivo(const std::string& origen, cons
 
     if (!archivoOrigen) {
         std::cerr << "No se pudo abrir el archivo de origen.\n";
-        return "";  // o podrías devolver un mensaje de error
+        return "";  // o podr?as devolver un mensaje de error
     }
     if (!archivoDestino) {
         std::cerr << "No se pudo crear el archivo de destino.\n";
