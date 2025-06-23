@@ -112,7 +112,7 @@ namespace DiskControllerServer {
 			this->label3 = (gcnew System::Windows::Forms::Label());
 			this->textBox1 = (gcnew System::Windows::Forms::TextBox());
 			this->textBox2 = (gcnew System::Windows::Forms::TextBox());
-			this->button1 = (gcnew System::Windows::Forms::Button());
+			//this->button1 = (gcnew System::Windows::Forms::Button());
 			this->label4 = (gcnew System::Windows::Forms::Label());
 			this->label5 = (gcnew System::Windows::Forms::Label());
 			this->label6 = (gcnew System::Windows::Forms::Label());
@@ -187,16 +187,6 @@ namespace DiskControllerServer {
 			this->textBox2->Size = System::Drawing::Size(314, 20);
 			this->textBox2->TabIndex = 5;
 			// 
-			// button1
-			// 
-			this->button1->Location = System::Drawing::Point(593, 39);
-			this->button1->Name = L"button1";
-			this->button1->Size = System::Drawing::Size(75, 23);
-			this->button1->TabIndex = 6;
-			this->button1->Text = L"Connect";
-			this->button1->UseVisualStyleBackColor = true;
-			this->button1->Click += gcnew System::EventHandler(this, &MyForm::button3_Click);
-			// 
 			// label4
 			// 
 			this->label4->AutoSize = true;
@@ -268,102 +258,6 @@ namespace DiskControllerServer {
 #pragma endregion
 		private: System::Void textBox1_TextChanged(System::Object^ sender, System::EventArgs^ e) {
 		}	
-
-	private: System::Void button3_Click(System::Object^ sender, System::EventArgs^ e) {
-		using namespace msclr::interop;
-		String^ texto = textBox2->Text;
-		PDF_Reader_Compresion lector;
-
-		// Convertir managed String^ a std::string 
-		// Aqui debe ir la direccion que manda sofi del pdf
-		std::string rutaPDFOriginal = marshal_as<std::string>(texto);
-
-		// Carpeta base fija
-		std::string rutaBase = "C:\\PDFR\\";
-
-		std::string RutaPDFNueva = rutaBase + lector.obtenerNombreBaseConTipo(rutaPDFOriginal);
-
-		// Copiar PDF a carpeta fija manteniendo nombre original
-		std::string rutaPDF = lector.copiarArchivo(rutaPDFOriginal, RutaPDFNueva);
-
-		if (rutaPDF.empty()) {
-			std::string mensaje = rutaPDFOriginal;
-			System::String^ msg = gcnew System::String(mensaje.c_str());
-			MessageBox::Show(msg, "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
-			return;
-		}
-
-		// Procesar PDF y comprimir Huffman
-		std::string resultado = lector.procesarPDFyGuardarHuffman(rutaPDF, rutaBase);
-
-		if (resultado.empty()) {
-			MessageBox::Show("Error: No se pudo procesar el PDF y comprimir.", "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
-			return;
-		}
-
-		// Opcional: mostrar resultado parcial en consola
-		std::cout << "Proceso completado. Resultado (inicio):\n" << resultado.substr(0, 50) << "...\n";
-		
-		// Iniciar el Conneccion con Nodos
-		// Obtener IP y puerto del nodo actual
-		std::string ip = marshal_as<std::string>(textBox1->Text);
-		int port = Convert::ToInt32(textBox2->Text);
-		
-		// Enviar al nodo
-		ConeccionHTTP con;
-		std::string respuesta = con.sendStatusToNode(ip, port);
-
-		// ========== Aplicar el RAID 5  ==========
-		// Extraer solo el texto codificado (parte despu?s del '|')
-		size_t separador = resultado.find('|');
-		std::string textoCodificado = "";
-		if (separador != std::string::npos) {
-			textoCodificado = resultado.substr(separador + 1);
-		}
-
-		if (!textoCodificado.empty()) {
-			// Variables para almacenar los bloques finales
-			std::string bloque1, bloque2, bloque3, bloque4;
-
-			// Crear instancia de RAID5 y ejecutar el algoritmo
-			RAID5 raid5;
-			raid5.raid5Algorithm(textoCodificado, bloque1, bloque2, bloque3, bloque4);
-
-			// Obtener nombre base del PDF para los archivos RAID5
-			std::string nombrePDF = obtenerNombreBaseLocal(rutaPDF);
-
-			// Guardar los bloques en archivos separados
-			std::ofstream archivo1(rutaBase + "RAID5_" + nombrePDF + "_Bloque1.txt");
-			std::ofstream archivo2(rutaBase + "RAID5_" + nombrePDF + "_Bloque2.txt");
-			std::ofstream archivo3(rutaBase + "RAID5_" + nombrePDF + "_Bloque3.txt");
-			std::ofstream archivo4(rutaBase + "RAID5_" + nombrePDF + "_Bloque4.txt");
-
-			if (archivo1 && archivo2 && archivo3 && archivo4) {
-				archivo1 << bloque1;
-				archivo2 << bloque2;
-				archivo3 << bloque3;
-				archivo4 << bloque4;
-
-				archivo1.close();
-				archivo2.close();
-				archivo3.close();
-				archivo4.close();
-
-				enviarBloquesGeneradosARaidNodes(bloque1, bloque2, bloque3, bloque4, nombrePDF);
-
-				std::cout << "Se logro almacenar los bloques con raid 5" << std::endl;
-			}
-			else {
-				std::cerr << "Error: No se pudieron crear los archivos del raid" << std::endl;
-			}
-		}
-		else {
-			std::cerr << "Error: No hay texto codificado para aplicar raid." << std::endl;
-		}
-
-		// Descomprimir el texto codificado y mostrar resultados
-		lector.DecomprimirFile(resultado, rutaBase, rutaPDF);
-	}
 	
 	private: System::Void comboBox1_SelectedIndexChanged(System::Object^ sender, System::EventArgs^ e) {
 		// Obtener la selección actual
