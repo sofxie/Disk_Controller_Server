@@ -1,0 +1,5 @@
+﻿  ConeccionHTTP.cpp
+C:\Users\sofia\source\repos\Disk_Controller_Server\Disk_Controller_Server\ConeccionHTTP.cpp(100,19): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\sofia\source\repos\Disk_Controller_Server\Disk_Controller_Server\ConeccionHTTP.cpp(102,79): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+  ConeccionHTTP.obj : MSIL module encountered; incremental linking is disabled for MSIL; performing full link
+  Disk_Controller_Server.vcxproj -> C:\Users\sofia\source\repos\Disk_Controller_Server\x64\Debug\Disk_Controller_Server.exe
